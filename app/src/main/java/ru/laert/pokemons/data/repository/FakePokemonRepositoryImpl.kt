@@ -1,13 +1,15 @@
 package ru.laert.pokemons.data.repository
 
-import ru.laert.pokemons.data.model.Pokemon
-import ru.laert.pokemons.data.model.Ability
+import ru.laert.pokemons.domain.model.Pokemon
+import ru.laert.pokemons.domain.model.Ability
+import ru.laert.pokemons.domain.repository.PokemonRepository
 
-class PokemonRepository {
-    fun getPokemons(): List<Pokemon> = mockPokemons
+class FakePokemonRepositoryImpl: PokemonRepository {
+    override suspend fun getPokemons(): List<Pokemon> = mockPokemons
 
-    fun getPokemonById(id: Int): Pokemon? =
+    override suspend fun getPokemonById(id: Int): Pokemon =
         mockPokemons.find { it.id == id }
+            ?: throw NoSuchElementException("Pokemon with id=$id not found")
 
     private val mockPokemons = listOf(
         Pokemon(
