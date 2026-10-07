@@ -1,4 +1,4 @@
-package ru.laert.pokemons.data.model
+package ru.laert.pokemons.domain.model
 
 data class Ability(
     val name: String,
