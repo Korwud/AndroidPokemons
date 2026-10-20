@@ -6,4 +6,6 @@ interface PokemonRepository {
     suspend fun getPokemons(): List<Pokemon>
 
     suspend fun getPokemonById(id: Int): Pokemon
+
+    suspend fun getPokemonsByType(type: String) : List<Pokemon>
 }

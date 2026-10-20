@@ -13,35 +13,85 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.laert.pokemons.domain.model.Pokemon
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
+import ru.laert.pokemons.ui.settings.SettingsScreen
 
 @Composable
 fun ListScreen(
-    onPokemonClick: (Int) -> Unit,
-    viewModel: ListViewModel = viewModel()
+    onPokemonClick: (Int) -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    when (val state = uiState) {
-        is ListUiState.Loading -> LoadingContent()
-        is ListUiState.Success -> PokemonList(
-            pokemons = state.pokemons,
-            onPokemonClick = onPokemonClick
+    val viewModel: ListViewModel = koinViewModel {
+        parametersOf(context)
+    }
+
+    val uiState by viewModel.uiState.collectAsState()
+    var showSettings by remember { mutableStateOf(false) }
+    val isBadgeActive by viewModel.badgeCache.isFilterActive.collectAsState<Boolean>()
+
+    Scaffold(
+        floatingActionButton = {
+            BadgedBox(
+                badge = {
+                    if (isBadgeActive) {
+                        Badge()
+                    }
+                }
+            ) {
+                FloatingActionButton(
+                    onClick = { showSettings = true },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Настройки"
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            when (val state = uiState) {
+                is ListUiState.Loading -> LoadingContent()
+                is ListUiState.Success -> PokemonList(
+                    pokemons = state.pokemons,
+                    onPokemonClick = onPokemonClick
+                )
+                is ListUiState.Error -> ErrorContent(state.message)
+            }
+        }
+    }
+
+    if (showSettings) {
+        SettingsScreen(
+            onDismiss = { showSettings = false }
         )
-        is ListUiState.Error -> ErrorContent(state.message)
     }
 }
 

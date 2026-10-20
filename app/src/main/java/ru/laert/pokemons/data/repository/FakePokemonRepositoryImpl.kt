@@ -11,6 +11,8 @@ class FakePokemonRepositoryImpl: PokemonRepository {
         mockPokemons.find { it.id == id }
             ?: throw NoSuchElementException("Pokemon with id=$id not found")
 
+    override suspend fun getPokemonsByType(type: String): List<Pokemon> = mockPokemons
+
     private val mockPokemons = listOf(
         Pokemon(
             id = 1,
