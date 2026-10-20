@@ -16,6 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,11 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
-import ru.laert.pokemons.data.model.Ability
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
+import ru.laert.pokemons.domain.model.Ability
+import ru.laert.pokemons.domain.model.Pokemon
 import ru.laert.pokemons.ui.theme.colorForType
 
 @Composable
@@ -41,81 +44,117 @@ fun DetailScreen(
     pokemonId: Int,
     onBackClick: () -> Unit
 ) {
-    val viewModel: DetailViewModel = viewModel(
-        factory = viewModelFactory {
-            initializer { DetailViewModel(pokemonId) }
+    val viewModel: DetailViewModel = koinViewModel { parametersOf(pokemonId) }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
+
+    when (val state = uiState) {
+        is DetailUiState.Loading -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         }
-    )
-    val pokemon by viewModel.pokemon.collectAsState()
+        is DetailUiState.Error -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(state.message, color = MaterialTheme.colorScheme.error)
+            }
+        }
+        is DetailUiState.Success -> {
+            DetailContent(
+                pokemon = state.pokemon,
+                isFavorite = isFavorite,
+                onFavoriteClick = { viewModel.toggleFavorite(state.pokemon) },
+                onBackClick = onBackClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun DetailContent(
+    pokemon: Pokemon,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    val typeColor = colorForType(pokemon.types.firstOrNull() ?: "normal")
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (pokemon == null) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(typeColor.copy(alpha = 0.25f))
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(48.dp))
+
+            AsyncImage(
+                model = pokemon.imageUrl,
+                contentDescription = pokemon.name,
+                modifier = Modifier.size(200.dp)
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = pokemon.name.replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Покемон не найден")
+                pokemon.types.forEach { type ->
+                    TypeChip(type)
+                }
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(Modifier.height(48.dp))
 
-                AsyncImage(
-                    model = pokemon?.imageUrl,
-                    contentDescription = pokemon?.name,
-                    modifier = Modifier.size(200.dp)
-                )
+            Spacer(Modifier.height(24.dp))
 
-                Spacer(Modifier.height(16.dp))
+            InfoRow("Рост", "${pokemon.height / 10.0} м")
+            InfoRow("Вес", "${pokemon.weight / 10.0} кг")
 
-                Text(
-                    text = pokemon!!.name.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+            Spacer(Modifier.height(24.dp))
 
-                Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Способности",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    pokemon!!.types.forEach { type ->
-                        TypeChip(type)
-                    }
-                }
+            Spacer(Modifier.height(8.dp))
 
-                Spacer(Modifier.height(24.dp))
-
-                InfoRow("Рост", "${pokemon!!.height / 10.0} м")
-                InfoRow("Вес", "${pokemon!!.weight / 10.0} кг")
-
-                Spacer(Modifier.height(24.dp))
-
-                Text(
-                    text = "Способности",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                pokemon!!.abilities.forEach { ability ->
-                    AbilityRow(ability)
-                }
+            pokemon.abilities.forEach { ability ->
+                AbilityRow(ability)
             }
         }
 
         IconButton(
             onClick = onBackClick,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(8.dp)
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+        }
+
+        IconButton(
+            onClick = onFavoriteClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = "В избранное",
+                tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
