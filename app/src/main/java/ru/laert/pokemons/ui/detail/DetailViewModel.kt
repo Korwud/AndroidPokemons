@@ -1,5 +1,6 @@
 package ru.laert.pokemons.ui.detail
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +36,13 @@ class DetailViewModel(
         viewModelScope.launch {
             _uiState.value = DetailUiState.Loading
             try {
-                val pokemon = getPokemonDetailsUseCase(pokemonId)
-                _uiState.value = DetailUiState.Success(pokemon)
+                val cachedPokemon = favoriteRepository.getFavoriteById(pokemonId)
+                if (cachedPokemon != null) {
+                    _uiState.value = DetailUiState.Success(cachedPokemon)
+                } else {
+                    val pokemon = getPokemonDetailsUseCase(pokemonId)
+                    _uiState.value = DetailUiState.Success(pokemon)
+                }
             } catch (e: Exception) {
                 _uiState.value = DetailUiState.Error(e.message ?: "Ошибка загрузки")
             }

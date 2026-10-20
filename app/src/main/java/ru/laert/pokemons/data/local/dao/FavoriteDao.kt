@@ -15,6 +15,9 @@ interface FavoriteDao {
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_pokemons WHERE id = :id)")
     fun isFavorite(id: Int): Flow<Boolean>
 
+    @Query("SELECT * FROM favorite_pokemons WHERE id = :id")
+    suspend fun getFavoriteById(id: Int): FavoritePokemonEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addFavorite(pokemon: FavoritePokemonEntity)
 

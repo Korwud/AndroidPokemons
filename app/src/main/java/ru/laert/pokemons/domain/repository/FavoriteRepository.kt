@@ -12,4 +12,6 @@ interface FavoriteRepository {
     suspend fun addFavorite(pokemon: Pokemon)
 
     suspend fun removeFavorite(id: Int)
+
+    suspend fun getFavoriteById(id: Int): Pokemon?
 }
