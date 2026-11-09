@@ -33,7 +33,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
-import ru.laert.pokemons.data.model.Ability
 import ru.laert.pokemons.ui.theme.colorForType
 
 @Composable
@@ -49,7 +48,8 @@ fun DetailScreen(
     val pokemon by viewModel.pokemon.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (pokemon == null) {
+        val ui = pokemon
+        if (ui == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -67,33 +67,29 @@ fun DetailScreen(
                 Spacer(Modifier.height(48.dp))
 
                 AsyncImage(
-                    model = pokemon?.imageUrl,
-                    contentDescription = pokemon?.name,
+                    model = ui.imageUrl,
+                    contentDescription = ui.name,
                     modifier = Modifier.size(200.dp)
                 )
 
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    text = pokemon!!.name.replaceFirstChar { it.uppercase() },
+                    text = ui.name,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
                 Spacer(Modifier.height(8.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    pokemon!!.types.forEach { type ->
-                        TypeChip(type)
-                    }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ui.types.forEach { TypeChip(it.name) }
                 }
 
                 Spacer(Modifier.height(24.dp))
 
-                InfoRow("Рост", "${pokemon!!.height / 10.0} м")
-                InfoRow("Вес", "${pokemon!!.weight / 10.0} кг")
+                InfoRow("Рост", ui.height)
+                InfoRow("Вес", ui.weight)
 
                 Spacer(Modifier.height(24.dp))
 
@@ -105,9 +101,7 @@ fun DetailScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                pokemon!!.abilities.forEach { ability ->
-                    AbilityRow(ability)
-                }
+                ui.abilities.forEach { AbilityRow(it) }
             }
         }
 
@@ -129,10 +123,27 @@ private fun TypeChip(type: String) {
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
-            text = type.replaceFirstChar { it.uppercase() },
+            text = type,
             color = Color.White,
             style = MaterialTheme.typography.labelLarge
         )
+    }
+}
+
+@Composable
+private fun AbilityRow(ability: AbilityUi) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = ability.name)
+        ability.isHiddenLabel?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
     }
 }
 
@@ -144,22 +155,5 @@ private fun InfoRow(label: String, value: String) {
     ) {
         Text(text = label, style = MaterialTheme.typography.bodyLarge)
         Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-private fun AbilityRow(ability: Ability) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = ability.name.replaceFirstChar { it.uppercase() })
-        if (ability.isHidden) {
-            Text(
-                text = "скрытая",
-                color = MaterialTheme.colorScheme.secondary,
-                style = MaterialTheme.typography.labelMedium
-            )
-        }
     }
 }
