@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import ru.laert.pokemons.ui.detail.DetailScreen
 import ru.laert.pokemons.ui.list.ListScreen
 import androidx.navigation.toRoute
+import ru.laert.pokemons.ui.favorites.FavoritesScreen
 
 @Composable
 fun AppNavHost(
@@ -44,8 +45,10 @@ fun AppNavHost(
             PlaceholderScreen("Профиль — скоро")
         }
 
-        composable<SettingsRoute> {
-            PlaceholderScreen("Настройки — скоро")
+        composable<FavoritesRoute> {
+            FavoritesScreen(
+                onPokemonClick = { pokemonId -> navController.navigate(DetailRoute(pokemonId)) }
+            )
         }
     }
 }

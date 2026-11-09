@@ -3,6 +3,7 @@ package ru.laert.pokemons.data.mapper
 import ru.laert.pokemons.data.remote.dto.AbilitySlotDto
 import ru.laert.pokemons.data.remote.dto.PokemonDetailDto
 import ru.laert.pokemons.data.remote.dto.PokemonListItemDto
+import ru.laert.pokemons.data.remote.dto.TypePokemonDto
 import ru.laert.pokemons.domain.model.Ability
 import ru.laert.pokemons.domain.model.Pokemon
 
@@ -23,5 +24,9 @@ fun AbilitySlotDto.toDomain(): Ability = Ability(
 )
 
 fun PokemonListItemDto.extractId(): Int? {
+    return url.trimEnd('/').substringAfterLast('/').toIntOrNull()
+}
+
+fun TypePokemonDto.extractId(): Int? {
     return url.trimEnd('/').substringAfterLast('/').toIntOrNull()
 }

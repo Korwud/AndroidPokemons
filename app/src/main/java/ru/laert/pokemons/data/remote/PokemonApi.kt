@@ -5,6 +5,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.laert.pokemons.data.remote.dto.PokemonDetailDto
 import ru.laert.pokemons.data.remote.dto.PokemonListResponse
+import ru.laert.pokemons.data.remote.dto.TypeDetailDto
 
 interface PokemonApi {
     @GET("pokemon")
@@ -17,4 +18,9 @@ interface PokemonApi {
     suspend fun getPokemonById(
         @Path("id") id: Int
     ) : PokemonDetailDto
+
+    @GET("type/{name}")
+    suspend fun getPokemonsByType(
+        @Path("name") typeName: String
+    ) : TypeDetailDto
 }

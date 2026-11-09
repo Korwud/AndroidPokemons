@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,10 +32,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import ru.laert.pokemons.ui.theme.colorForType
 
 @Composable
@@ -41,12 +42,10 @@ fun DetailScreen(
     pokemonId: Int,
     onBackClick: () -> Unit
 ) {
-    val viewModel: DetailViewModel = viewModel(
-        factory = viewModelFactory {
-            initializer { DetailViewModel(pokemonId) }
-        }
-    )
+    val viewModel: DetailViewModel = koinViewModel { parametersOf(pokemonId) }
+
     val uiState by viewModel.uiState.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
 
     when (val state = uiState) {
         is DetailUiState.Loading -> {
@@ -60,14 +59,25 @@ fun DetailScreen(
             }
         }
         is DetailUiState.Success -> {
-            DetailContent(state.pokemon, onBackClick)
+            DetailContent(
+                pokemon = state.pokemon,
+                isFavorite = isFavorite,
+                onFavoriteClick = { viewModel.toggleFavorite(state.pokemon) },
+                onBackClick = onBackClick
+            )
         }
     }
 }
 
 @Composable
-private fun DetailContent(pokemon: DetailUiModel, onBackClick: () -> Unit) {
+private fun DetailContent(
+    pokemon: DetailUiModel,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
     val typeColor = colorForType(pokemon.types.firstOrNull()?.name ?: "normal")
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -95,12 +105,8 @@ private fun DetailContent(pokemon: DetailUiModel, onBackClick: () -> Unit) {
 
             Spacer(Modifier.height(8.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                pokemon.types.forEach { type ->
-                    TypeChip(type.name)
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                pokemon.types.forEach { TypeChip(it.name) }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -118,16 +124,29 @@ private fun DetailContent(pokemon: DetailUiModel, onBackClick: () -> Unit) {
 
             Spacer(Modifier.height(8.dp))
 
-            pokemon.abilities.forEach { ability ->
-                AbilityRow(ability)
-            }
+            pokemon.abilities.forEach { AbilityRow(it) }
         }
 
         IconButton(
             onClick = onBackClick,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(8.dp)
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+        }
+
+        IconButton(
+            onClick = onFavoriteClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = "В избранное",
+                tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }

@@ -30,4 +30,21 @@ class PokemonRepositoryImpl(
     override suspend fun getPokemonById(id: Int): Pokemon {
         return api.getPokemonById(id).toDomain()
     }
+
+    override suspend fun getPokemonsByType(type: String): List<Pokemon> {
+        val typeResponse = api.getPokemonsByType(type)
+
+        return typeResponse.pokemon.mapNotNull { item ->
+            val id = item.pokemon.extractId() ?: return@mapNotNull null
+            Pokemon(
+                id = id,
+                name = item.pokemon.name,
+                imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png",
+                types = emptyList(),
+                abilities = emptyList(),
+                height = 0,
+                weight = 0
+            )
+        }
+    }
 }
