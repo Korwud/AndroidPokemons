@@ -34,10 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
-import ru.laert.pokemons.domain.model.Ability
-import ru.laert.pokemons.domain.model.Pokemon
 import ru.laert.pokemons.ui.theme.colorForType
-import kotlin.div
 
 @Composable
 fun DetailScreen(
@@ -69,8 +66,8 @@ fun DetailScreen(
 }
 
 @Composable
-private fun DetailContent(pokemon: Pokemon, onBackClick: () -> Unit) {
-    val typeColor = colorForType(pokemon.types.firstOrNull() ?: "normal")
+private fun DetailContent(pokemon: DetailUiModel, onBackClick: () -> Unit) {
+    val typeColor = colorForType(pokemon.types.firstOrNull()?.name ?: "normal")
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -91,7 +88,7 @@ private fun DetailContent(pokemon: Pokemon, onBackClick: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = pokemon.name.replaceFirstChar { it.uppercase() },
+                text = pokemon.name,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -102,14 +99,14 @@ private fun DetailContent(pokemon: Pokemon, onBackClick: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 pokemon.types.forEach { type ->
-                    TypeChip(type)
+                    TypeChip(type.name)
                 }
             }
 
             Spacer(Modifier.height(24.dp))
 
-            InfoRow("Рост", "${pokemon.height / 10.0} м")
-            InfoRow("Вес", "${pokemon.weight / 10.0} кг")
+            InfoRow("Рост", pokemon.height)
+            InfoRow("Вес", pokemon.weight)
 
             Spacer(Modifier.height(24.dp))
 
@@ -144,7 +141,7 @@ private fun TypeChip(type: String) {
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
-            text = type.replaceFirstChar { it.uppercase() },
+            text = type,
             color = Color.White,
             style = MaterialTheme.typography.labelLarge
         )
@@ -163,15 +160,15 @@ private fun InfoRow(label: String, value: String) {
 }
 
 @Composable
-private fun AbilityRow(ability: Ability) {
+private fun AbilityRow(ability: AbilityUi) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = ability.name.replaceFirstChar { it.uppercase() })
-        if (ability.isHidden) {
+        Text(text = ability.name)
+        ability.isHiddenLabel?.let {
             Text(
-                text = "скрытая",
+                text = it,
                 color = MaterialTheme.colorScheme.secondary,
                 style = MaterialTheme.typography.labelMedium
             )
