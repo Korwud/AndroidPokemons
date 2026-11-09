@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,63 +46,80 @@ fun DetailScreen(
             initializer { DetailViewModel(pokemonId) }
         }
     )
-    val pokemon by viewModel.pokemon.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        val ui = pokemon
-        if (ui == null) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Покемон не найден")
+    when (val state = uiState) {
+        is DetailUiState.Loading -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        }
+        is DetailUiState.Error -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(state.message, color = MaterialTheme.colorScheme.error)
+            }
+        }
+        is DetailUiState.Success -> {
+            DetailContent(state.pokemon, onBackClick)
+        }
+    }
+}
+
+@Composable
+private fun DetailContent(pokemon: DetailUiModel, onBackClick: () -> Unit) {
+    val typeColor = colorForType(pokemon.types.firstOrNull()?.name ?: "normal")
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(typeColor.copy(alpha = 0.25f))
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(48.dp))
+
+            AsyncImage(
+                model = pokemon.imageUrl,
+                contentDescription = pokemon.name,
+                modifier = Modifier.size(200.dp)
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = pokemon.name,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Spacer(Modifier.height(48.dp))
-
-                AsyncImage(
-                    model = ui.imageUrl,
-                    contentDescription = ui.name,
-                    modifier = Modifier.size(200.dp)
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                Text(
-                    text = ui.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ui.types.forEach { TypeChip(it.name) }
+                pokemon.types.forEach { type ->
+                    TypeChip(type.name)
                 }
+            }
 
-                Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
-                InfoRow("Рост", ui.height)
-                InfoRow("Вес", ui.weight)
+            InfoRow("Рост", pokemon.height)
+            InfoRow("Вес", pokemon.weight)
 
-                Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
-                Text(
-                    text = "Способности",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            Text(
+                text = "Способности",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
 
-                ui.abilities.forEach { AbilityRow(it) }
+            pokemon.abilities.forEach { ability ->
+                AbilityRow(ability)
             }
         }
 
@@ -131,6 +149,17 @@ private fun TypeChip(type: String) {
 }
 
 @Composable
+private fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
 private fun AbilityRow(ability: AbilityUi) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -144,16 +173,5 @@ private fun AbilityRow(ability: AbilityUi) {
                 style = MaterialTheme.typography.labelMedium
             )
         }
-    }
-}
-
-@Composable
-private fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label, style = MaterialTheme.typography.bodyLarge)
-        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
     }
 }

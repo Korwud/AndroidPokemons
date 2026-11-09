@@ -1,6 +1,6 @@
 package ru.laert.pokemons.ui.list
 
-import ru.laert.pokemons.data.model.Pokemon
+import ru.laert.pokemons.domain.model.Pokemon
 
 sealed interface ListUiState {
     data object Loading : ListUiState
