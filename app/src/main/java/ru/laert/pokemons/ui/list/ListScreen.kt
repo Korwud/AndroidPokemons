@@ -53,7 +53,7 @@ fun ListScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     var showSettings by remember { mutableStateOf(false) }
-    val isBadgeActive by viewModel.badgeCache.isFilterActive.collectAsState<Boolean>()
+    val isBadgeActive by viewModel.isFilterActive.collectAsState()
 
     Scaffold(
         floatingActionButton = {
