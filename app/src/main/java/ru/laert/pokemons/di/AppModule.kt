@@ -72,5 +72,5 @@ val appModule = module {
 
     viewModel { ProfileViewModel(get(), androidContext()) }
 
-    viewModel { EditProfileViewModel(get()) }
+    viewModel { EditProfileViewModel(get(), androidContext()) }
 }

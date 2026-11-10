@@ -1,6 +1,8 @@
 package ru.laert.pokemons.ui.profile
 
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,12 +49,27 @@ import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.collectLatest
+import java.util.Locale
+import android.provider.Settings
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.core.net.toUri
 
-val pokemonRanks = listOf(
+private val pokemonRanks = listOf(
     "Младший мастер покемонов",
     "Мастер покемонов",
     "Старший мастер покемонов"
 )
+
+private val timeRegex = Regex("^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +78,12 @@ fun EditProfileScreen(
     viewModel: EditProfileViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
+
     val profileState by viewModel.profileState.collectAsState()
+
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val isTimeValid = profileState.timeRCommandAttack.isNotBlank() && timeRegex.matches(profileState.timeRCommandAttack)
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -98,6 +120,21 @@ fun EditProfileScreen(
         cameraLauncher.launch(uri)
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collectLatest { event ->
+            when (event) {
+                is EditProfileViewModel.UiEvent.RequestExactAlarmPermission -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                            data = "package:${context.packageName}".toUri()
+                        }
+                        context.startActivity(intent)
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -114,7 +151,9 @@ fun EditProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .imePadding()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
@@ -198,9 +237,30 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            OutlinedTextField(
+                value = profileState.timeRCommandAttack,
+                onValueChange = viewModel::updateTime,
+                label = { Text("Команда R атакует нас именно в это время! (HH:mm)") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = !isTimeValid && profileState.timeRCommandAttack.isNotEmpty(),
+                supportingText = {
+                    if (!isTimeValid && profileState.timeRCommandAttack.isNotEmpty()) {
+                        Text("Неверный формат. Используйте HH:mm", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                trailingIcon = {
+                    IconButton(onClick = { showTimePicker = true }) {
+                        Icon(Icons.Default.AccessTime, contentDescription = "Выбрать время")
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
             Button(
                 onClick = { viewModel.saveProfile(onBackClick) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isTimeValid
             ) {
                 Text("Готово")
             }
@@ -240,5 +300,47 @@ fun EditProfileScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
+    }
+
+    if (showTimePicker) {
+        val safeHour = profileState.timeRCommandAttack.substringBefore(":").toIntOrNull()
+            ?.takeIf { it in 0..23 } ?: 0
+
+        val safeMinute = profileState.timeRCommandAttack.substringAfter(":").toIntOrNull()
+            ?.takeIf { it in 0..59 } ?: 0
+
+        val timePickerState = rememberTimePickerState(
+            initialHour = safeHour,
+            initialMinute = safeMinute,
+            is24Hour = true
+        )
+
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val formattedTime = String.format(
+                            Locale.getDefault(),
+                            "%02d:%02d",
+                            timePickerState.hour,
+                            timePickerState.minute
+                        )
+                        viewModel.updateTime(formattedTime)
+                        showTimePicker = false
+                    }
+                ) {
+                    Text("ОК")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Отмена")
+                }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
     }
 }

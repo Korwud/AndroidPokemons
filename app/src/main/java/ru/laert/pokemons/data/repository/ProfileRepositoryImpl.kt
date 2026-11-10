@@ -25,6 +25,7 @@ class ProfileRepositoryImpl(
         val AVATAR_URI = stringPreferencesKey("avatar_uri")
         val RESUME_URL = stringPreferencesKey("resume_url")
         val RANK = stringPreferencesKey("rank")
+        val TIME_R_COMMAND_ATTACK = stringPreferencesKey("time_r_command_attack")
     }
 
     override val profileFlow: Flow<UserProfile> = context.profileDataStore.data.map { prefs ->
@@ -32,7 +33,8 @@ class ProfileRepositoryImpl(
             fullName = prefs[Keys.FULL_NAME] ?: "",
             avatarUri = prefs[Keys.AVATAR_URI] ?: "",
             resumeUrl = prefs[Keys.RESUME_URL] ?: "",
-            rank = prefs[Keys.RANK] ?: ""
+            rank = prefs[Keys.RANK] ?: "",
+            timeRCommandAttack = prefs[Keys.TIME_R_COMMAND_ATTACK] ?: ""
         )
     }
 
@@ -42,6 +44,7 @@ class ProfileRepositoryImpl(
             prefs[Keys.AVATAR_URI] = profile.avatarUri
             prefs[Keys.RESUME_URL] = profile.resumeUrl
             prefs[Keys.RANK] = profile.rank
+            prefs[Keys.TIME_R_COMMAND_ATTACK] = profile.timeRCommandAttack
         }
     }
 
