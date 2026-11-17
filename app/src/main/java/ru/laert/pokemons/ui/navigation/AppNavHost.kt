@@ -14,8 +14,8 @@ import ru.laert.pokemons.ui.detail.DetailScreen
 import ru.laert.pokemons.ui.list.ListScreen
 import androidx.navigation.toRoute
 import ru.laert.pokemons.ui.favorites.FavoritesScreen
-import ru.laert.pokemons.ui.profile.EditProfileScreen
-import ru.laert.pokemons.ui.profile.ProfileScreen
+import ru.laert.profile.ui.profile.EditProfileScreen
+import ru.laert.profile.ui.profile.ProfileScreen
 
 @Composable
 fun AppNavHost(

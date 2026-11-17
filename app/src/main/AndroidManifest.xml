@@ -41,7 +41,7 @@
         </provider>
 
         <receiver
-            android:name=".data.notifications.ReminderReceiver"
+            android:name="ru.laert.core.data.notifications.ReminderReceiver"
             android:enabled="true"
             android:exported="false" />
 

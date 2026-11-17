@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import ru.laert.pokemons.ui.theme.colorForType
+import ru.laert.core.ui.theme.colorForType
 
 @Composable
 fun DetailScreen(

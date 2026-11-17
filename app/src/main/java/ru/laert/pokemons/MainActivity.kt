@@ -23,7 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import ru.laert.pokemons.ui.navigation.AppNavHost
 import ru.laert.pokemons.ui.navigation.BottomBar
 import ru.laert.pokemons.ui.navigation.bottomNavItems
-import ru.laert.pokemons.ui.theme.PokemonsTheme
+import ru.laert.core.ui.theme.PokemonsTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
