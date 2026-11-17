@@ -12,4 +12,7 @@ data class DetailRoute(val pokemonId: Int)
 data object ProfileRoute
 
 @Serializable
+data object EditProfileRoute
+
+@Serializable
 data object FavoritesRoute

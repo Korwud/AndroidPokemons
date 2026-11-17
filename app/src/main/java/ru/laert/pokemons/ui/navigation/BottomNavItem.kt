@@ -15,6 +15,6 @@ data class BottomNavItem(
 
 val bottomNavItems = listOf(
     BottomNavItem(ListRoute, Icons.AutoMirrored.Filled.List, "Покемоны"),
-    BottomNavItem(ProfileRoute, Icons.Default.AccountCircle, "Профиль"),
-    BottomNavItem(FavoritesRoute, Icons.Default.Favorite, "Избранное")
+    BottomNavItem(FavoritesRoute, Icons.Default.Favorite, "Избранное"),
+    BottomNavItem(ProfileRoute, Icons.Default.AccountCircle, "Профиль")
 )

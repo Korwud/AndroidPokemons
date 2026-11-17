@@ -26,6 +26,9 @@ object NetworkModule {
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
+    val httpClient: OkHttpClient
+        get() = okHttpClient
+
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(okHttpClient)

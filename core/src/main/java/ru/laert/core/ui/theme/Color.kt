@@ -1,4 +1,4 @@
-package ru.laert.pokemons.ui.theme
+package ru.laert.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
