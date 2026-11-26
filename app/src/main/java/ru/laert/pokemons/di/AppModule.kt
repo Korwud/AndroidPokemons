@@ -70,7 +70,7 @@ val appModule = module {
 
     single<ProfileRepository> { ProfileRepositoryImpl(androidContext()) }
 
-    viewModel { ProfileViewModel(get(), androidContext()) }
+    viewModel { ProfileViewModel(get()) }
 
-    viewModel { EditProfileViewModel(get()) }
+    viewModel { EditProfileViewModel(get(), androidContext()) }
 }

@@ -1,5 +1,7 @@
 package ru.laert.pokemons.ui.profile
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,19 +19,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +48,18 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val profile by viewModel.profile.collectAsState()
+
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is ProfileEvent.OpenPdf -> openPdf(context, event.file, snackbarHostState)
+                is ProfileEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -49,7 +71,8 @@ fun ProfileScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -106,6 +129,28 @@ fun ProfileScreen(
             ) {
                 Text("Открыть резюме")
             }
+        }
+    }
+}
+
+private fun openPdf(context: Context, file: File, snackbarHostState: SnackbarHostState) {
+    val uri = FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        file
+    )
+
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "application/pdf")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        kotlinx.coroutines.MainScope().launch {
+            snackbarHostState.showSnackbar("Нет приложения для просмотра PDF")
         }
     }
 }

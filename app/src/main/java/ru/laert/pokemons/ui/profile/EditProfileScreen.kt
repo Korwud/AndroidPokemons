@@ -36,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +48,7 @@ import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
+import androidx.core.net.toUri
 
 val pokemonRanks = listOf(
     "Младший мастер покемонов",
@@ -67,13 +69,13 @@ fun EditProfileScreen(
 
     var showImageSourceSheet by remember { mutableStateOf(false) }
 
-    var temporaryCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var temporaryCameraUri by rememberSaveable { mutableStateOf<String?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            viewModel.updateAvatarUri(uri.toString())
+            viewModel.updateAvatarUri(uri)
         }
     }
 
@@ -82,19 +84,20 @@ fun EditProfileScreen(
     ) { success: Boolean ->
         if (success) {
             temporaryCameraUri?.let { uri ->
-                viewModel.updateAvatarUri(uri.toString())
+                viewModel.updateAvatarUri(uri.toUri())
             }
         }
     }
 
     fun launchCamera() {
-        val file = File.createTempFile("avatar_", ".jpg", context.cacheDir)
+        val dir = File(context.filesDir, "avatars").apply { mkdirs() }
+        val file = File(dir, "avatar_${System.currentTimeMillis()}.jpg")
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
             file
         )
-        temporaryCameraUri = uri
+        temporaryCameraUri = uri.toString()
         cameraLauncher.launch(uri)
     }
 
