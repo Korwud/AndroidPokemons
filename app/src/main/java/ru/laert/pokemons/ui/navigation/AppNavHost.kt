@@ -14,6 +14,8 @@ import ru.laert.pokemons.ui.detail.DetailScreen
 import ru.laert.pokemons.ui.list.ListScreen
 import androidx.navigation.toRoute
 import ru.laert.pokemons.ui.favorites.FavoritesScreen
+import ru.laert.pokemons.ui.profile.EditProfileScreen
+import ru.laert.pokemons.ui.profile.ProfileScreen
 
 @Composable
 fun AppNavHost(
@@ -42,7 +44,15 @@ fun AppNavHost(
         }
 
         composable<ProfileRoute> {
-            PlaceholderScreen("Профиль — скоро")
+            ProfileScreen(
+                onEditClick = { navController.navigate(EditProfileRoute) }
+            )
+        }
+
+        composable<EditProfileRoute> {
+            EditProfileScreen(
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
         composable<FavoritesRoute> {
